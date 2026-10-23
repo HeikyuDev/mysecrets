@@ -36,7 +36,7 @@ without trusting any cloud.
 | Encrypted manual backup | ✅ done | Self-contained `.mysenc` file, restorable on any device |
 | Zero network | ✅ guard-tested | Release manifest requests no `INTERNET` permission |
 | Biometric / PIN gate | 🚧 next | Mercado Pago style unlock (secure-access spec) |
-| Password & passphrase generator | 🚧 next | CSPRNG + entropy meter (credential-generator spec) |
+| Password & passphrase generator | ✅ done | CSPRNG + entropy meter + one-tap Generate |
 | Rotation reminders | 🚧 next | Per-credential 90/180/365-day policy (renewal-reminders spec) |
 
 ## Security model
@@ -83,6 +83,7 @@ flutter run
 | `lib/vault/keys/` | Key manager, wrapped-DEK secure storage |
 | `lib/vault/vault_service.dart` | Lock/unlock lifecycle + ciphertext-only CRUD |
 | `lib/vault/export/` | `.mysenc` export / restore |
+| `lib/generator/` | CSPRNG password + passphrase generation, entropy meter |
 | `lib/data/` | Drift (SQLite) schema — blobs only, no plaintext columns |
 | `lib/app/` + `lib/ui/` | `VaultController` state + setup / unlock / home screens |
 | `test/` | Unit, integration, widget, and zero-network guard tests |
@@ -95,8 +96,7 @@ flutter_secure_storage (hardware-backed keys)
 ## Roadmap
 
 1. `secure-access` — biometric + PIN gate, auto-lock
-2. `credential-generator` — strong passwords with entropy meter
-3. `renewal-reminders` — local notifications when a credential turns "due"
+2. `renewal-reminders` — local notifications when a credential turns "due"
 
 Each capability is planned as a spec (proposal → spec → design → tasks) before
 implementation. vault-core, the encrypted storage engine, is already built.
