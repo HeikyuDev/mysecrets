@@ -4,6 +4,8 @@ import 'package:mysecrets/access/gate_controller.dart';
 import 'package:mysecrets/access/pin_service.dart';
 import 'package:mysecrets/app/vault_controller.dart';
 import 'package:mysecrets/data/vault_database.dart';
+import 'package:mysecrets/reminders/null_notifier.dart';
+import 'package:mysecrets/reminders/reminder_service.dart';
 import 'package:mysecrets/vault/keys/key_manager.dart';
 import 'package:mysecrets/vault/vault_service.dart';
 
@@ -28,6 +30,7 @@ void main() {
         quickUnlockStore: InMemoryQuickUnlockStore(),
         biometricPort: StubBiometricPort(),
       ),
+      reminders: ReminderService(notifier: NullNotifier()),
     );
   });
 

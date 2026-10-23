@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Rotation reminders (renewal-reminders): Android 13+ runtime permission. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="mysecrets"
         android:name="${applicationName}"

@@ -38,7 +38,7 @@ without trusting any cloud.
 | Biometric / PIN gate | ✅ done | Biometric primary, 6-digit PIN fallback, 60s auto-lock |
 | Password & passphrase generator | ✅ done | CSPRNG + entropy meter + one-tap Generate |
 | Rotation computation + due badge | ✅ done | Pure policy math + NotifierPort, badge on home |
-| OS notifications | 🚧 next | flutter_local_notifications adapter (renewal-reminders spec) |
+| OS notifications | ✅ done | flutter_local_notifications, idempotent per-credential ids + weekly recheck |
 
 ## Security model
 
@@ -97,7 +97,7 @@ flutter run
 | `lib/vault/vault_service.dart` | Lock/unlock lifecycle + ciphertext-only CRUD |
 | `lib/vault/export/` | `.mysenc` export / restore |
 | `lib/generator/` | CSPRNG password + passphrase generation, entropy meter |
-| `lib/reminders/` | Rotation policy math, reminder service + notifier port |
+| `lib/reminders/` | Rotation policy math, reminder service, OS adapter (POST_NOTIFICATIONS) |
 | `lib/access/` | Gate controller, PIN hashing, quick-unlock DEK store, biometric port, auto-lock |
 | `lib/data/` | Drift (SQLite) schema — blobs only, no plaintext columns |
 | `lib/app/` + `lib/ui/` | `VaultController` state + setup / gate enroll / gate / home screens |
@@ -106,12 +106,14 @@ flutter run
 ## Stack
 
 Flutter 3.47 (Dart) · drift (SQLite) · pointycastle (Argon2id + AES-GCM) ·
-flutter_secure_storage (hardware-backed keys) · local_auth (biometric gate)
+flutter_secure_storage (hardware-backed keys) · local_auth (biometric gate) ·
+flutter_local_notifications (rotation reminders)
 
 ## Roadmap
 
 1. ~~`secure-access` — biometric + PIN gate, auto-lock~~ ✅ shipped
-2. `renewal-reminders` — OS notification adapter on top of the shipped due engine
+2. ~~`renewal-reminders` — OS notification adapter on top of the due engine~~ ✅ shipped
+3. Real-device validation pass (biometrics + notifications on Android)
 
 Each capability is planned as a spec (proposal → spec → design → tasks) before
 implementation. vault-core, the encrypted storage engine, is already built.

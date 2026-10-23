@@ -8,6 +8,8 @@ import '../access/gate_controller.dart';
 import '../access/pin_service.dart';
 import '../access/quick_unlock_store.dart';
 import '../data/vault_database.dart' hide Credential;
+import '../reminders/os_notifier.dart';
+import '../reminders/reminder_service.dart';
 import '../vault/credential.dart';
 import '../vault/export/vault_export_service.dart';
 import '../vault/keys/key_manager.dart';
@@ -20,11 +22,19 @@ class VaultController extends ChangeNotifier {
   final VaultService vault;
   final VaultDatabase db;
   final GateController gate;
+  final ReminderService reminders;
+  Timer? _recheckTimer;
 
   AppPhase phase = AppPhase.loading;
   List<Credential> credentials = const [];
 
-  VaultController({required this.vault, required this.db, required this.gate});
+  VaultController({
+    required this.vault,
+    required this.db,
+    required this.gate,
+    ReminderService? reminders,
+  }) : reminders = reminders ??
+            ReminderService(notifier: OsNotifier());
 
   static VaultController create() {
     final store = SecureKeyStore();
@@ -71,8 +81,27 @@ class VaultController extends ChangeNotifier {
     vault.unlockWithDek(dek);
     phase = AppPhase.unlocked;
     await refreshCredentials();
+    await _remindDue();
+    _scheduleWeeklyRecheck();
     notifyListeners();
     return true;
+  }
+
+  /// Posts/clears rotation notifications for every stored credential.
+  Future<List<Credential>> _remindDue() async {
+    if (credentials.isEmpty) return const [];
+    return reminders.process(
+      credentials: credentials,
+      nowUtc: DateTime.now().toUtc(),
+    );
+  }
+
+  void _scheduleWeeklyRecheck() {
+    _recheckTimer?.cancel();
+    _recheckTimer = Timer.periodic(
+        const Duration(days: 7), (_) async {
+      await _remindDue();
+    });
   }
 
   Future<bool> unlock({required String masterPassphrase}) async {
@@ -80,6 +109,8 @@ class VaultController extends ChangeNotifier {
       await vault.unlock(masterPassphrase: masterPassphrase);
       phase = AppPhase.unlocked;
       await refreshCredentials();
+      await _remindDue();
+      _scheduleWeeklyRecheck();
       notifyListeners();
       return true;
     } catch (_) {
@@ -89,9 +120,16 @@ class VaultController extends ChangeNotifier {
 
   void lock() {
     vault.lock();
+    _recheckTimer?.cancel();
     credentials = const [];
     phase = AppPhase.locked;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _recheckTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> refreshCredentials() async {
