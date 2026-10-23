@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/vault_controller.dart';
+import '../../generator/password_generator.dart';
 import '../../vault/credential.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -102,6 +103,20 @@ class _AddCredentialSheet extends StatefulWidget {
   State<_AddCredentialSheet> createState() => _AddCredentialSheetState();
 }
 
+class _EntropyHint extends StatelessWidget {
+  final GeneratorConfig config;
+
+  const _EntropyHint.config(this.config);
+
+  @override
+  Widget build(BuildContext context) {
+    final bits = PasswordGenerator.entropyBits(config);
+    final label = PasswordGenerator.labelFor(bits).name;
+    return Text('$bits bits — $label',
+        style: Theme.of(context).textTheme.bodySmall);
+  }
+}
+
 class _AddCredentialSheetState extends State<_AddCredentialSheet> {
   final _formKey = GlobalKey<FormState>();
   final _platform = TextEditingController();
@@ -164,10 +179,22 @@ class _AddCredentialSheetState extends State<_AddCredentialSheet> {
                 controller: _password,
                 validator: (v) =>
                     (v == null || v.isEmpty) ? 'Required' : null,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.casino_outlined),
+                    tooltip: 'Generate strong password',
+                    onPressed: () {
+                      const config = GeneratorConfig();
+                      setState(() {
+                        _password.text = PasswordGenerator.generate(config);
+                      });
+                    },
+                  ),
                 ),
               ),
+              const SizedBox(height: 4),
+              _EntropyHint.config(const GeneratorConfig()),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(
                 initialValue: _rotationDays,
