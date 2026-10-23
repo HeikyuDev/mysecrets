@@ -1,0 +1,44 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import '../vault.dart';
+import '../credential.dart';
+
+class VaultExportService {
+  VaultExportService._();
+
+  /// Produces a sealed .mysenc image: versioned header + KEK-wrapped fresh
+  /// DEK + AES-GCM sealed payload with every credential as JSON.
+  /// Requires the master passphrase at export time (user re-enters it),
+  /// so the exported file is self-contained and restorable on any device.
+  static Uint8List export({
+    required String masterPassphrase,
+    required List<Credential> credentials,
+  }) {
+    final payload = Uint8List.fromList(
+        utf8.encode(jsonEncode(credentials.map((c) => jsonDecode(c.toJson())).toList())));
+    return Vault.seal(
+      masterPassphrase: masterPassphrase,
+      dek: Vault.newDek(),
+      payload: payload,
+    );
+  }
+
+  /// Restores the credential list from a .mysenc image.
+  /// Throws VaultCipherException on wrong passphrase or tampered file,
+  /// VaultHeaderException on unsupported format version.
+  /// Content is recovered 1:1; timestamps are reset on import by the caller
+  /// (VaultService.addCredential stamps fresh metadata) so rotation age is
+  /// unknown after a device change — lastChanged starts now.
+  static List<Credential> restore({
+    required String masterPassphrase,
+    required Uint8List vaultFile,
+  }) {
+    final payload = Vault.unsealPayload(
+      masterPassphrase: masterPassphrase,
+      vaultFile: vaultFile,
+    );
+    final list = jsonDecode(utf8.decode(payload)) as List<dynamic>;
+    return list.map((e) => Credential.fromJson(jsonEncode(e))).toList();
+  }
+}
