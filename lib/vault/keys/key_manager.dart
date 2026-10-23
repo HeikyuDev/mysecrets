@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:mysecrets/vault/crypto/key_derivation_service.dart';
 import 'package:mysecrets/vault/crypto/vault_cipher.dart';
-import 'package:mysecrets/vault/crypto/vault_header.dart';
 import 'package:mysecrets/vault/crypto/vault_random.dart';
 
 import 'vault_key_store.dart';

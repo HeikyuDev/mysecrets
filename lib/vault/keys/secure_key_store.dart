@@ -11,7 +11,10 @@ class SecureKeyStore implements VaultKeyStore {
   SecureKeyStore({FlutterSecureStorage? storage})
       : _storage = storage ??
             const FlutterSecureStorage(
-                aOptions: AndroidOptions(encryptedSharedPreferences: true));
+                aOptions: AndroidOptions(),
+                iOptions: IOSOptions(
+                    accessibility:
+                        KeychainAccessibility.first_unlock_this_device));
 
   @override
   Future<void> save(String key, Uint8List value) async {
