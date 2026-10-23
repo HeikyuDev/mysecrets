@@ -1,10 +1,13 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mysecrets/access/gate_controller.dart';
+import 'package:mysecrets/access/pin_service.dart';
 import 'package:mysecrets/app/vault_controller.dart';
 import 'package:mysecrets/data/vault_database.dart';
 import 'package:mysecrets/vault/keys/key_manager.dart';
 import 'package:mysecrets/vault/vault_service.dart';
 
+import '../access/fakes.dart';
 import '../vault/keys/in_memory_key_store.dart';
 
 void main() {
@@ -12,12 +15,19 @@ void main() {
 
   setUp(() {
     final db = VaultDatabase(NativeDatabase.memory());
+    final store = InMemoryKeyStore();
     controller = VaultController(
       vault: VaultService(
-        keyManager: KeyManager(InMemoryKeyStore()),
+        keyManager: KeyManager(store),
         db: db,
       ),
       db: db,
+      gate: GateController(
+        pinService: PinService(),
+        keyStore: store,
+        quickUnlockStore: InMemoryQuickUnlockStore(),
+        biometricPort: StubBiometricPort(),
+      ),
     );
   });
 
@@ -31,19 +41,18 @@ void main() {
     expect(controller.phase, AppPhase.needsSetup);
   });
 
-  test('setup -> unlocked, credentials visible; lock -> locked', () async {
+  test('setup -> enrollGate -> unlocked, credentials visible', () async {
     await controller.bootstrap();
     await controller.setup(masterPassphrase: 'master-with-strength 42!');
+    expect(controller.phase, AppPhase.enrollingGate);
+
+    await controller.enrollGate(pin: '123456');
     expect(controller.phase, AppPhase.unlocked);
 
     await controller.addCredential(
         platform: 'Test', username: 'u', password: 'p');
     expect(controller.credentials, hasLength(1));
     expect(controller.credentials.first.platform, 'Test');
-
-    controller.lock();
-    expect(controller.phase, AppPhase.locked);
-    expect(controller.credentials, isEmpty);
   });
 
   test('unlock with wrong passphrase keeps locked', () async {

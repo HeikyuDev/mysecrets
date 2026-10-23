@@ -61,6 +61,16 @@ class VaultService {
     _state = VaultState.unlocked;
   }
 
+  /// Fast-path unlock using the DEK provided by the access gate (biometric
+  /// or PIN verified against OS-protected storage).
+  void unlockWithDek(Uint8List dek) {
+    _dek = Uint8List.fromList(dek);
+    _state = VaultState.unlocked;
+  }
+
+  /// Exposes the DEK for quick-unlock enrollment. Only callable unlocked.
+  Uint8List exposeDek() => _requireDek;
+
   void lock() {
     _dek = null;
     _state = VaultState.locked;
