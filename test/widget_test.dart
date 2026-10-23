@@ -1,30 +1,28 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:mysecrets/app/vault_controller.dart';
+import 'package:mysecrets/data/vault_database.dart';
 import 'package:mysecrets/main.dart';
+import 'package:mysecrets/ui/screens/setup_screen.dart';
+import 'package:mysecrets/vault/keys/key_manager.dart';
+import 'package:mysecrets/vault/vault_service.dart';
+
+import 'vault/keys/in_memory_key_store.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('app boots into setup screen when no vault exists',
+      (tester) async {
+    final db = VaultDatabase(NativeDatabase.memory());
+    final controller = VaultController(
+      vault: VaultService(
+        keyManager: KeyManager(InMemoryKeyStore()),
+        db: db,
+      ),
+      db: db,
+    );
+    await tester.pumpWidget(MySecretsApp(controller: controller));
     await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.byType(SetupScreen), findsOneWidget);
   });
 }
