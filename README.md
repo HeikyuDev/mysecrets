@@ -35,7 +35,7 @@ without trusting any cloud.
 | Lock / unlock lifecycle | ✅ done | Locks on demand; wrong passphrase never decrypts |
 | Encrypted manual backup | ✅ done | Self-contained `.mysenc` file, restorable on any device |
 | Zero network | ✅ guard-tested | Release manifest requests no `INTERNET` permission |
-| Biometric / PIN gate | 🚧 next | Mercado Pago style unlock (secure-access spec) |
+| Biometric / PIN gate | ✅ done | Biometric primary, 6-digit PIN fallback, 60s auto-lock |
 | Password & passphrase generator | ✅ done | CSPRNG + entropy meter + one-tap Generate |
 | Rotation computation + due badge | ✅ done | Pure policy math + NotifierPort, badge on home |
 | OS notifications | 🚧 next | flutter_local_notifications adapter (renewal-reminders spec) |
@@ -56,6 +56,18 @@ plaintext columns, and a regression test asserts it stays that way.
   No backdoors, no reset, no recovery keys.
 - The export flow requires re-entering the master passphrase, so the resulting
   `.mysenc` is self-contained and safe wherever you keep it.
+
+### Quick unlock
+
+After setup you enroll a **6-digit PIN**; the OS stores a copy of the DEK under
+user-presence protection (Keychain / Keystore). Daily unlocking is then:
+
+- **Biometric first** (fingerprint / face via the platform prompt).
+- **PIN fallback**, verified against a salted PBKDF2 hash — only the hash is
+  stored, and wrong attempts trigger progressive backoff (2^attempt seconds).
+- Without quick unlock enrolled, unlock falls back to the master passphrase.
+- **Auto-lock**: the vault locks on backgrounding or after 60 seconds of
+  inactivity. Locking wipes plaintext keys from memory.
 
 ## Quick path
 
@@ -86,18 +98,19 @@ flutter run
 | `lib/vault/export/` | `.mysenc` export / restore |
 | `lib/generator/` | CSPRNG password + passphrase generation, entropy meter |
 | `lib/reminders/` | Rotation policy math, reminder service + notifier port |
+| `lib/access/` | Gate controller, PIN hashing, quick-unlock DEK store, biometric port, auto-lock |
 | `lib/data/` | Drift (SQLite) schema — blobs only, no plaintext columns |
-| `lib/app/` + `lib/ui/` | `VaultController` state + setup / unlock / home screens |
+| `lib/app/` + `lib/ui/` | `VaultController` state + setup / gate enroll / gate / home screens |
 | `test/` | Unit, integration, widget, and zero-network guard tests |
 
 ## Stack
 
 Flutter 3.47 (Dart) · drift (SQLite) · pointycastle (Argon2id + AES-GCM) ·
-flutter_secure_storage (hardware-backed keys)
+flutter_secure_storage (hardware-backed keys) · local_auth (biometric gate)
 
 ## Roadmap
 
-1. `secure-access` — biometric + PIN gate, auto-lock
+1. ~~`secure-access` — biometric + PIN gate, auto-lock~~ ✅ shipped
 2. `renewal-reminders` — OS notification adapter on top of the shipped due engine
 
 Each capability is planned as a spec (proposal → spec → design → tasks) before
