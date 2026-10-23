@@ -6,6 +6,7 @@ class Credential {
   final String username;
   final String password;
   final String? notes;
+  final int? rotationPolicyDays;
   final DateTime createdAtUtc;
   final DateTime updatedAtUtc;
   final DateTime lastChangedUtc;
@@ -16,6 +17,7 @@ class Credential {
     required this.username,
     required this.password,
     this.notes,
+    this.rotationPolicyDays,
     required this.createdAtUtc,
     required this.updatedAtUtc,
     required this.lastChangedUtc,
@@ -26,6 +28,7 @@ class Credential {
     String? username,
     String? password,
     String? notes,
+    int? rotationPolicyDays,
   }) =>
       Credential(
         id: id,
@@ -33,6 +36,7 @@ class Credential {
         username: username ?? this.username,
         password: password ?? this.password,
         notes: notes ?? this.notes,
+        rotationPolicyDays: rotationPolicyDays ?? this.rotationPolicyDays,
         createdAtUtc: createdAtUtc,
         updatedAtUtc: updatedAtUtc,
         lastChangedUtc: lastChangedUtc,
@@ -43,6 +47,8 @@ class Credential {
         'username': username,
         'password': password,
         if (notes != null) 'notes': notes,
+        if (rotationPolicyDays != null)
+          'rotationPolicyDays': rotationPolicyDays,
         'createdAt': createdAtUtc.toIso8601String(),
         'updatedAt': updatedAtUtc.toIso8601String(),
         'lastChangedAt': lastChangedUtc.toIso8601String(),
@@ -56,6 +62,7 @@ class Credential {
       username: map['username'] as String,
       password: map['password'] as String,
       notes: map['notes'] as String?,
+      rotationPolicyDays: map['rotationPolicyDays'] as int?,
       createdAtUtc: DateTime.parse(map['createdAt'] as String).toUtc(),
       updatedAtUtc:
           DateTime.parse(map['updatedAt'] as String).toUtc(),

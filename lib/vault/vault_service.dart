@@ -92,6 +92,7 @@ class VaultService {
       username: username,
       password: password,
       notes: notes,
+      rotationPolicyDays: rotationPolicyDays,
       createdAtUtc: now,
       updatedAtUtc: now,
       lastChangedUtc: now,

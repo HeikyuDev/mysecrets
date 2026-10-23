@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../app/vault_controller.dart';
 import '../../generator/password_generator.dart';
+import '../../reminders/rotation_policy.dart';
 import '../../vault/credential.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -34,9 +35,18 @@ class _HomeScreenState extends State<HomeScreen> {
       listenable: widget.controller,
       builder: (context, _) {
         final credentials = widget.controller.credentials;
+        final now = DateTime.now().toUtc();
+        final due = credentials
+            .where((c) => RotationPolicy.isDue(
+                  lastChangedUtc: c.lastChangedUtc,
+                  policyDays: c.rotationPolicyDays,
+                  nowUtc: now,
+                ))
+            .length;
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.transparent,
+            title: Text('mySecrets${due > 0 ? ' ($due due)' : ''}'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.lock_outline),
